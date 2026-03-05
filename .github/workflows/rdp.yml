@@ -4,25 +4,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  rdp:
     runs-on: windows-latest
     timeout-minutes: 360
 
     steps:
+      - name: Enable RDP
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-    - name: Enable Remote Desktop
-      run: |
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        net user rdpuser Password@123 /add
-        net localgroup administrators rdpuser /add
+      - name: Create User
+        run: |
+          net user runneradmin Password@123 /add
+          net localgroup administrators runneradmin /add
 
-    - name: Download Cloudflare Tunnel
-      run: |
-        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
-
-    - name: Start RDP Tunnel
-      run: |
-        .\cloudflared.exe tunnel --url tcp://localhost:3389
-      env:
-        CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      - name: Show Connection Info
+        run: |
+          echo "RDP is enabled on this machine."
+          echo "Username: runneradmin"
+          echo "Password: Password@123"
+          ipconfig
+          Start-Sleep -Seconds 21600
